@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="app"></canvas>
+    <!-- 着色器的创建 -->
+    <script id="vertex-shader-2d" type="notjs">
+      // 设置属性变量，
+      attribute vec4 a_position;
+      void main() {
+        // 定点着色器的主要变量
+        gl_Position = a_position;
+      }
+    </script>
+
+    <script id="fragment-shader-2d" type="notjs">
+        // 片段着色器精度设置
+        // mediump 代表中等精度
+        precision mediump float;
+
+        void main(){
+            gl_FragColor = vec4(1,0,0.5,1);
+        }
+    </script>
+    <script type="module" >
+        import {createShader, createProgram, resizeCanvasToDisplaySize} from "./utils.js";
+        const canvas = document.querySelector("#app");
+        const gl = canvas.getContext('webgl');
+        const vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
+        const fragmentShaderSource = document.querySelector("#fragment-shader-2d").text;
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader); // 构建program
+        const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.APPLY_BUFFER, positionBuffer);
+        
+        const positions = [
+            0, 0,
+            0, 0.5,
+            0.7, 0
+        ]
+
+        gl.bufferData(gl.APPLY_BUFFER, new Float32Array(positions), gl.STATE_DRAW);
+        resizeCanvasToDisplaySize(gl.canvas);
+        gl.viewport(0,0, gl.canvas.width, gl.canvas.height); // 调节屏幕空间
+        gl.clearColor(0,0,0,0) // 清空画布
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program);
+        gl.enableVertexAttribArray(positionAttributeLocation)
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        const size = 2, // 单次迭代提取两个单位数据
+            type=gl.FLOAT, // 每个单位数据类型 为 32 位浮点数
+            normalize = false, // 不需要归一化数据
+            stride=0, // 0 = 移动单位数量 * 每个单位内存
+            offset=0; // 从缓冲区起始位置开始读取
+        
+        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        const primitiveType = gl.TRIANGLES;
+        const doffset = 0;
+        const count = 3;
+        gl.drawArrays(primitiveType, doffset, count);
+    </script>
+</body>
+</html>
